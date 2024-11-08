@@ -1,28 +1,37 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import DashboardView from '@/views/DashboardView.vue'
+import authRoutes from './auth.routes';
+import { useAuthStore } from '@/stores/auth.store';
+
+const routes: Array<RouteRecordRaw> = [
+  { path: "/:pathMatch(.*)*", redirect: "/" },
+  {
+    path: "/",
+    component: DashboardView,
+    meta: { requiresAuth: true, layout: "default" },
+  },
+]
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    // {
-    // path: '/',
-    // name: 'home',
-    // component: HomeView,
-    // meta: { ensure: Required.NULL }
-    // }
-  ]
-})
+    ...routes,
+    ...authRoutes,
+  ],
+});
 
 router.beforeEach((to, from, next) => {
-  // if (to.meta.ensure === Required.NO_AUTH && useAuthStore().isLoggedIn()) {
-  //   next('/')
-  // } else if (to.meta.ensure === Required.AUTH && !useAuthStore().isLoggedIn()) {
-  //   next('/login')
-  // } else {
-  //   next()
-  // }
-})
+  if (
+    to.meta.requiresAuth &&
+    !useAuthStore().user &&
+    !useAuthStore().isLoggedIn() &&
+    to.fullPath != "/auth/login"
+  ) {
+    next("/auth/login");
+  }
+  else {
+    next();
+  }
+});
 
-router.afterEach(() => {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-})
-
-export default router
+export default router;
