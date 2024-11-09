@@ -3,8 +3,8 @@ import LoginViewVue from "@/views/auth/LoginView.vue";
 const authRoutes: Array<RouteRecordRaw> = [
   {
     path: "/auth/login",
-    component: () => LoginViewVue,
+    component: LoginViewVue,
     meta: { requiresAuth: false, layout: "auth" },
   },
-  ];
-  export default authRoutes;
+];
+export default authRoutes;
