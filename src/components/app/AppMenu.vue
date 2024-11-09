@@ -3,10 +3,15 @@ import { ref } from 'vue';
 
 import AppMenuItem from '@/components/app/AppMenuItem.vue';
 
-const model:any = ref([
+const model: any = ref([
     {
         label: 'Home',
-        items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' }]
+        items: [
+            { label: 'Tableau de bord', icon: 'pi pi-fw pi-home', to: '/' },
+            { label: 'Commandes', icon: 'pi pi-fw pi-shopping-cart', to: '/orders' },
+            { label: 'Produits', icon: 'pi pi-fw pi-shopping-cart', to: '/products' },
+            { label: 'Clients', icon: 'pi pi-fw pi-shopping-cart', to: '/customers' }
+        ]
     }
 ]);
 </script>

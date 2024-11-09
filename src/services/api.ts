@@ -6,7 +6,7 @@ export const api = axios.create({
 
 if (localStorage.getItem("auth")) {
     const authData = JSON.parse(String(localStorage.getItem("auth")));
-    const token = authData ? authData.token : null;
+    const token = authData ? authData.accessToken : null;
 
     // Set the Authorization header if token is available
     if (token) {
