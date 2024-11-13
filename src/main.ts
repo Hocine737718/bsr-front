@@ -21,6 +21,9 @@ import InputNumber from 'primevue/inputnumber';
 import Toolbar from 'primevue/toolbar';
 import Dialog from 'primevue/dialog';
 import FileUpload from 'primevue/fileupload';
+import Checkbox from 'primevue/checkbox';
+import Dropdown from 'primevue/dropdown';
+import Divider from 'primevue/divider';
 
 const app = createApp(App)
 
@@ -45,6 +48,8 @@ app.component('InputNumber', InputNumber);
 app.component('Toolbar', Toolbar);
 app.component('Dialog', Dialog);
 app.component('FileUpload', FileUpload);
-
+app.component('Checkbox', Checkbox);
+app.component('Dropdown', Dropdown);
+app.component('Divider', Divider);
 
 app.mount('#app')

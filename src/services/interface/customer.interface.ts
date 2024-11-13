@@ -4,7 +4,7 @@ export interface CustomerInterface {
     id: string;
     name: string;
     phone: string;
-    address?: string;
+    address?: any;
     orders?: OrderInterface[];
     createdAt: string;
     updatedAt: string;
@@ -14,11 +14,11 @@ export interface CustomerInterface {
 export interface CreateCustomerInterface {
     name: string;
     phone: string;
-    address?: string;
+    address?: any;
 }
 
 export interface UpdateCustomerInterface {
     name?: string;
     phone?: string;
-    address?: string;
+    address?: any;
 }

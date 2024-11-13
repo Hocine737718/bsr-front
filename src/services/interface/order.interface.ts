@@ -4,6 +4,8 @@ export interface OrderInterface {
     id: string;
     customerId: string;
     total: number;
+    delivery_cost?: number;
+    is_to_office?: boolean;
     customer?: CustomerInterface;
     observation?: string; // Optional field
     createdAt: Date;
@@ -15,11 +17,17 @@ export interface CreateOrderInterface {
     customerId: string;
     total: number;
     observation?: string;
+    delivery_cost?: number;
+    is_to_office?: boolean;
+    items?: CreateOrderItemsInterface[]
 }
 export interface UpdateOrderInterface {
     customerId?: string;
     total?: number;
     observation?: string;
+    delivery_cost?: number;
+    is_to_office?: boolean;
+    items?: CreateOrderItemsInterface[];
 }
 export interface CreateOrderItemsInterface {
     order_id: string;

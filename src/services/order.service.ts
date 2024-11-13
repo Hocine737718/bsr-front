@@ -6,7 +6,7 @@ export async function createOrder(orderData: CreateOrderInterface): Promise<Orde
     return response as any;
 }
 
-export async function createOrderTems(id: string, itemsData: CreateOrderItemsInterface): Promise<OrderInterface> {
+export async function createOrderItems(id: string, itemsData: CreateOrderItemsInterface[]): Promise<OrderInterface> {
     const response = await api.post<OrderInterface>("/orders/" + id + "/items", itemsData);
     return response as any;
 }

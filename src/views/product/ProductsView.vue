@@ -19,7 +19,7 @@ const filters = ref({
 const formatCurrency = (value: string) => {
     const numberValue = parseFloat(value);
     if (isNaN(numberValue)) {
-        return 'دج 0.00';
+        return 'DZD 0.00';
     }
     return numberValue.toLocaleString('en-US', { style: 'currency', currency: 'DZD' });
 };

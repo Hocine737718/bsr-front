@@ -9,8 +9,7 @@ const model: any = ref([
         items: [
             { label: 'Tableau de bord', icon: 'pi pi-fw pi-home', to: '/' },
             { label: 'Commandes', icon: 'pi pi-fw pi-shopping-cart', to: '/orders' },
-            { label: 'Produits', icon: 'pi pi-fw pi-shopping-cart', to: '/products' },
-            { label: 'Clients', icon: 'pi pi-fw pi-shopping-cart', to: '/customers' }
+            { label: 'Produits', icon: 'pi pi-fw pi-shopping-cart', to: '/products' }
         ]
     }
 ]);
