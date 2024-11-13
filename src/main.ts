@@ -20,6 +20,7 @@ import InputIcon from 'primevue/inputicon';
 import InputNumber from 'primevue/inputnumber';
 import Toolbar from 'primevue/toolbar';
 import Dialog from 'primevue/dialog';
+import FileUpload from 'primevue/fileupload';
 
 const app = createApp(App)
 
@@ -43,6 +44,7 @@ app.component('InputIcon', InputIcon);
 app.component('InputNumber', InputNumber);
 app.component('Toolbar', Toolbar);
 app.component('Dialog', Dialog);
+app.component('FileUpload', FileUpload);
 
 
 app.mount('#app')

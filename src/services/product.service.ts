@@ -6,6 +6,17 @@ export async function createProduct(productData: CreateProductInterface): Promis
     return response as any;
 }
 
+export async function uploadProductImage(id: string, file: File) {
+    let formData = new FormData();
+    // @ts-ignore
+    formData.append('file', file);
+    await api.post(`/products/${id}/upload-image`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+}
+
 // Function to get all non-deleted products
 export async function getAllProducts(): Promise<ProductInterface[]> {
     const response = await api.get<ProductInterface[]>("/products/");
