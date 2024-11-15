@@ -7,3 +7,11 @@ export const getFullPath = (path: string) => {
     let x = baseURL + path;
     return x;
 }
+export enum Size {
+    S = 'S',
+    M = 'M',
+    L = 'L',
+    XL = 'XL',
+    XXL = 'XXL',
+}
+export const sizeEnumList = ['S', 'M', 'L', 'XL', 'XXL']; 

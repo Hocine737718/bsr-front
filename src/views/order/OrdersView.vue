@@ -3,7 +3,7 @@ import { FilterMatchMode } from 'primevue/api';
 import { ref, onMounted, watch } from 'vue';
 import { createOrder, createOrderItems, deleteOrder, getAllOrders, updateOrder } from '@/services/order.service';
 import type { CreateOrderInterface, OrderInterface, UpdateOrderInterface } from '@/services/interface/order.interface';
-import { getFullPath, getRandom } from '@/shared/utils';
+import { getFullPath, getRandom, Size, sizeEnumList } from '@/shared/utils';
 import { useToast } from 'primevue/usetoast';
 import { useRouter } from 'vue-router';
 import type { CreateCustomerInterface, UpdateCustomerInterface } from '@/services/interface/customer.interface';
@@ -40,9 +40,9 @@ function formatDate(d: string) {
 const formatCurrency = (value: string) => {
     const numberValue = parseFloat(value);
     if (isNaN(numberValue)) {
-        return 'DZD 0.00';
+        return '0 DZD';
     }
-    return numberValue.toLocaleString('en-US', { style: 'currency', currency: 'DZD' });
+    return numberValue + " DZD";
 };
 
 const createSubmitted = ref(false);
@@ -88,6 +88,12 @@ const hideCreateDialog = () => {
     createSubmitted.value = false;
     createDialog.value = false;
 };
+
+const removeItem = (index: number) => {
+    if (order.value.items && index !== -1) {
+        order.value.items.splice(index, 1);
+    }
+}
 
 const create = async () => {
     try {
@@ -246,7 +252,8 @@ const addOrderItem = () => {
         order_id: "",
         price: product.price,
         quantity: 1,
-        observation: undefined
+        observation: undefined,
+        size: Size.S
     });
     order.value.items?.forEach((item, index) => {
         watch(
@@ -275,7 +282,8 @@ const addOrderItemUpdate = () => {
         order_id: "",
         price: product.price,
         quantity: 1,
-        observation: undefined
+        observation: undefined,
+        size: Size.S
     });
     orderUpdate.value.items?.forEach((item, index) => {
         watch(
@@ -374,7 +382,7 @@ const addOrderItemUpdate = () => {
                         <small class="p-error" v-if="createSubmitted && !customer.name">Nom est obligatoire.</small>
                     </div>
                     <div class="field">
-                        <label for="phone">Phone</label>
+                        <label for="phone">Téléphone</label>
                         <InputText id="phone" v-model.trim="customer.phone" required="true" autofocus
                             :class="{ 'p-invalid': createSubmitted && !customer.phone }" />
                         <small class="p-error" v-if="createSubmitted && !customer.phone">Téléphone est
@@ -397,41 +405,55 @@ const addOrderItemUpdate = () => {
                     <div class="field text-center">
                         <Button icon="pi pi-plus" class="mr-2" severity="success" rounded @click="addOrderItem()" />
                     </div>
-                    <span v-if="order.items && order.items.length" v-for="item in order.items">
+                    <span v-if="order.items && order.items.length" v-for="(item, index) in order.items">
                         <div class="field">
-                            <label for="Commun">Produit</label>
-                            <Dropdown v-model="item.product_id" :options="products" optionLabel="name" optionValue="id"
-                                placeholder="Aucun" :filter="true" />
+                            <div class="formgrid grid">
+                                <div class="field col">
+                                    <label for="Commun">Produit</label>
+                                    <Dropdown v-model="item.product_id" :options="products" optionLabel="name"
+                                        optionValue="id" placeholder="Aucun" :filter="true" />
+                                </div>
+                                <div class="field col">
+                                    <label for="Commun">Taille</label>
+                                    <Dropdown v-model="item.size"
+                                        :options="sizeEnumList.map((item) => { return { value: item } })"
+                                        optionLabel="value" optionValue="value" placeholder="Aucun" :filter="true" />
+                                </div>
+                            </div>
                         </div>
                         <div class="field">
-                            <label for="quantity">Quantité</label>
-                            <InputNumber id="quantity" v-model="item.quantity" required="true" autofocus
-                                :class="{ 'p-invalid': createSubmitted && !item.quantity }" />
-                            <small class="p-error" v-if="createSubmitted && !item.quantity">Quantité est
-                                obligatoire.</small>
+                            <div class="formgrid grid">
+                                <div class="field col">
+                                    <label for="quantity">Quantité</label>
+                                    <InputNumber id="quantity" v-model="item.quantity" required="true" autofocus
+                                        :class="{ 'p-invalid': createSubmitted && !item.quantity }" />
+                                    <small class="p-error" v-if="createSubmitted && !item.quantity">Quantité est
+                                        obligatoire.</small>
+                                </div>
+                                <div class="field col">
+                                    <label for="price">Prix</label>
+                                    <InputNumber id="price" v-model="item.price"
+                                        :class="{ 'p-invalid': createSubmitted && !item.price }" />
+                                    <small class="p-error" v-if="createSubmitted && !item.price">Prix est
+                                        obligatoire.</small>
+                                </div>
+                            </div>
                         </div>
                         <div class="field">
-                            <label for="price">Prix</label>
-                            <InputNumber id="price" v-model="item.price" mode="currency" currency="DZD" locale="en-US"
-                                :class="{ 'p-invalid': createSubmitted && !item.price }" />
-                            <small class="p-error" v-if="createSubmitted && !item.price">Prix est
-                                obligatoire.</small>
+                            <Button severity="danger" label="Supprimer" icon="pi pi-trash" @click="removeItem(index)" />
                         </div>
                         <Divider layout="horizontal"></Divider>
                     </span>
                     <div class="field">
                         <label for="total">Total</label>
-                        <InputNumber id="total" v-model="order.total" mode="currency" currency="DZD" locale="en-US"
-                            required="true" autofocus :class="{ 'p-invalid': createSubmitted && !order.total }" />
+                        <InputNumber id="total" v-model="order.total" required="true" autofocus
+                            :class="{ 'p-invalid': createSubmitted && !order.total }" />
                         <small class="p-error" v-if="createSubmitted && !order.total">Total est obligatoire.</small>
                     </div>
                     <div class="field">
                         <label for="delivery_cost">Livraison</label>
-                        <InputNumber id="delivery_cost" v-model="order.delivery_cost" mode="currency" currency="DZD"
-                            locale="en-US" required="true" autofocus
+                        <InputNumber id="delivery_cost" v-model="order.delivery_cost" autofocus
                             :class="{ 'p-invalid': createSubmitted && !order.delivery_cost }" />
-                        <small class="p-error" v-if="createSubmitted && !order.delivery_cost">Livraison est
-                            obligatoire.</small>
                     </div>
                     <div class="field">
                         <div class="field-checkbox mb-0">
@@ -455,7 +477,7 @@ const addOrderItemUpdate = () => {
                             obligatoire.</small>
                     </div>
                     <div class="field">
-                        <label for="phone">Phone</label>
+                        <label for="phone">Téléphone</label>
                         <InputText id="phone" v-model.trim="customerUpdate.phone" required="true" autofocus
                             :class="{ 'p-invalid': createSubmitted && !customerUpdate.phone }" />
                         <small class="p-error" v-if="createSubmitted && !customerUpdate.phone">Téléphone est
@@ -490,7 +512,7 @@ const addOrderItemUpdate = () => {
                         </div>
                         <div class="field">
                             <label for="price">Prix</label>
-                            <InputNumber id="price" v-model="item.price" mode="currency" currency="DZD" locale="en-US"
+                            <InputNumber id="price" v-model="item.price"
                                 :class="{ 'p-invalid': createSubmitted && !item.price }" />
                             <small class="p-error" v-if="createSubmitted && !item.price">Prix est
                                 obligatoire.</small>
@@ -499,16 +521,14 @@ const addOrderItemUpdate = () => {
                     </span>
                     <div class="field">
                         <label for="total">Total</label>
-                        <InputNumber id="total" v-model="orderUpdate.total" mode="currency" currency="DZD"
-                            locale="en-US" required="true" autofocus
+                        <InputNumber id="total" v-model="orderUpdate.total" required="true" autofocus
                             :class="{ 'p-invalid': createSubmitted && !orderUpdate.total }" />
                         <small class="p-error" v-if="createSubmitted && !orderUpdate.total">Total est
                             obligatoire.</small>
                     </div>
                     <div class="field">
                         <label for="delivery_cost">Livraison</label>
-                        <InputNumber id="delivery_cost" v-model="orderUpdate.delivery_cost" mode="currency"
-                            currency="DZD" locale="en-US" required="true" autofocus
+                        <InputNumber id="delivery_cost" v-model="orderUpdate.delivery_cost" required="true" autofocus
                             :class="{ 'p-invalid': createSubmitted && !orderUpdate.delivery_cost }" />
                         <small class="p-error" v-if="createSubmitted && !orderUpdate.delivery_cost">Livraison est
                             obligatoire.</small>

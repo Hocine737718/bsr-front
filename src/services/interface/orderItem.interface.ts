@@ -1,3 +1,4 @@
+import type { Size } from "@/shared/utils";
 export interface OrderItemInterface {
     id: string;
     order_id: string;
@@ -6,4 +7,5 @@ export interface OrderItemInterface {
     price: number
     observation?: string;
     item_total: number;
+    size: Size;
 }

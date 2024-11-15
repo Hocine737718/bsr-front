@@ -19,9 +19,9 @@ const filters = ref({
 const formatCurrency = (value: string) => {
     const numberValue = parseFloat(value);
     if (isNaN(numberValue)) {
-        return 'DZD 0.00';
+        return '0 DZD';
     }
-    return numberValue.toLocaleString('en-US', { style: 'currency', currency: 'DZD' });
+    return numberValue + ' DZD';
 };
 
 const createSubmitted = ref(false);
@@ -269,7 +269,7 @@ onMounted(async () => {
                     </div>
                     <div class="field">
                         <label for="price">Prix</label>
-                        <InputNumber id="price" v-model="product.price" mode="currency" currency="DZD" locale="en-US"
+                        <InputNumber id="price" v-model="product.price" currency="DZD" locale="en-US"
                             :class="{ 'p-invalid': createSubmitted && !product.price }" />
                         <small class="p-error" v-if="createSubmitted && !product.price">Prix est obligatoire.</small>
                     </div>
@@ -306,8 +306,8 @@ onMounted(async () => {
                     </div>
                     <div class="field">
                         <label for="price">Prix</label>
-                        <InputNumber id="price" v-model="productUpdate.price" mode="currency" currency="DZD"
-                            locale="en-US" :class="{ 'p-invalid': updateSubmitted && !productUpdate.price }" />
+                        <InputNumber id="price" v-model="productUpdate.price" currency="DZD" locale="en-US"
+                            :class="{ 'p-invalid': updateSubmitted && !productUpdate.price }" />
                         <small class="p-error" v-if="updateSubmitted && !productUpdate.price">Prix est
                             obligatoire.</small>
                     </div>
