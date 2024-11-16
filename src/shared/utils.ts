@@ -8,6 +8,7 @@ export const getFullPath = (path: string) => {
     return x;
 }
 export enum Size {
+    XS = 'XS',
     S = 'S',
     M = 'M',
     L = 'L',

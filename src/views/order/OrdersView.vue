@@ -3,18 +3,15 @@ import { FilterMatchMode } from 'primevue/api';
 import { ref, onMounted, watch } from 'vue';
 import { createOrder, createOrderItems, deleteOrder, getAllOrders, updateOrder } from '@/services/order.service';
 import type { CreateOrderInterface, OrderInterface, UpdateOrderInterface } from '@/services/interface/order.interface';
-import { getFullPath, getRandom, Size, sizeEnumList } from '@/shared/utils';
 import { useToast } from 'primevue/usetoast';
-import { useRouter } from 'vue-router';
 import type { CreateCustomerInterface, UpdateCustomerInterface } from '@/services/interface/customer.interface';
 import { createCustomer, updateCustomer } from '@/services/customer.service';
 import WilayasMunicipalitiesJSON from '@/data/wilayas_municipalities.json' with { type: 'json' }
 import type { ProductInterface } from '@/services/interface/product.interface';
 import { getAllProducts } from '@/services/product.service';
-
+import { Size, sizeEnumList } from '@/shared/utils';
 
 const toast = useToast();
-const router = useRouter();
 const checkboxValue = ref([] as string[]);
 const products = ref<ProductInterface[]>([]);
 const orders = ref<OrderInterface[]>([]);
@@ -23,6 +20,9 @@ const selectedOrders = ref();
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS }
 });
+let addressList = WilayasMunicipalitiesJSON
+let municipalities = ref<any>([]);
+let wilayas = Object.keys(WilayasMunicipalitiesJSON).map((item) => { return { name: item } });
 
 function formatDate(d: string) {
     const date = new Date(d);
@@ -32,11 +32,8 @@ function formatDate(d: string) {
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     const seconds = String(date.getSeconds()).padStart(2, '0');
-
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
-
-
 const formatCurrency = (value: string) => {
     const numberValue = parseFloat(value);
     if (isNaN(numberValue)) {
@@ -44,6 +41,21 @@ const formatCurrency = (value: string) => {
     }
     return numberValue + " DZD";
 };
+const calculTotal = (items: { price: number, quantity: number }[]) => {
+    let total = 0;
+    items.forEach((item) => {
+        total += item.price * item.quantity;
+    })
+    return total;
+}
+const loadOrders = async () => {
+    const res = await getAllOrders();
+    orders.value = res;
+};
+onMounted(async () => {
+    await loadOrders();
+    products.value = await getAllProducts();
+});
 
 const createSubmitted = ref(false);
 const createDialog = ref(false);
@@ -64,7 +76,6 @@ const order = ref<CreateOrderInterface>({
     is_to_office: false,
     items: []
 });
-
 const openCreateDialog = () => {
     checkboxValue.value.length = 0;
     customer.value.name = "";
@@ -83,18 +94,40 @@ const openCreateDialog = () => {
     createSubmitted.value = false;
     createDialog.value = true;
 };
-
 const hideCreateDialog = () => {
     createSubmitted.value = false;
     createDialog.value = false;
 };
+const addOrderItem = () => {
+    let product = products.value[0];
+    let item = ref({
+        product_id: product.id,
+        order_id: "",
+        price: product.price,
+        quantity: 1,
+        observation: undefined,
+        size: Size.S
+    });
+    order.value.items?.push(item.value);
+    order.value.total += product.price;
+    watch(() => item.value.product_id, (newValue, oldValue) => {
+        if (newValue !== oldValue) {
+            let prd = products.value.find((item) => item.id === newValue);
+            if (prd) item.value.price = prd?.price;
+        }
 
+        if (order.value.total && order.value.items) order.value.total = calculTotal(order.value.items);
+    });
+    watch(item, () => {
+        if (order.value.total && order.value.items) order.value.total = calculTotal(order.value.items);
+    }, { deep: true });
+}
 const removeItem = (index: number) => {
     if (order.value.items && index !== -1) {
-        order.value.items.splice(index, 1);
+        let item = order.value.items.splice(index, 1);
+        if (order.value.total) order.value.total -= item[0].price * item[0].quantity;
     }
 }
-
 const create = async () => {
     try {
         createSubmitted.value = true;
@@ -115,6 +148,17 @@ const create = async () => {
         toast.add({ severity: 'error', summary: 'Erreur', detail: 'Commande n\' est pas créé !!', life: 3000 });
     }
 };
+watch(customer.value, (newValue) => {
+    municipalities.value.length = 0;
+    if (newValue.address && newValue.address.province) {
+        let list = (addressList as any)[newValue.address.province.name]
+        if (list) {
+            list.forEach((item: any) => {
+                municipalities.value.push({ name: item });
+            });
+        }
+    }
+});
 
 const updateSubmitted = ref(false);
 const updateDialog = ref(false);
@@ -156,17 +200,60 @@ const openUpdateDialog = (data: OrderInterface) => {
         total: data.total,
         delivery_cost: data.delivery_cost,
         is_to_office: data.is_to_office,
-        items: []
+        items: [],
     };
+    if (data?.items && data?.items.length) {
+        data.items.forEach((item, index) => {
+            orderUpdate.value.items?.push(item);
+            watch(() => item.product_id, (newValue, oldValue) => {
+                if (newValue !== oldValue) {
+                    let prd = products.value.find((item) => item.id === newValue);
+                    if (prd) item.price = prd?.price;
+                }
+                if (orderUpdate.value.total && orderUpdate.value.items) orderUpdate.value.total = calculTotal(orderUpdate.value.items);
+            });
+            watch(ref(item), () => {
+                if (orderUpdate.value.total && orderUpdate.value.items) orderUpdate.value.total = calculTotal(orderUpdate.value.items);
+            }, { deep: true });
+        });
+    }
     updateSubmitted.value = false;
     updateDialog.value = true;
 };
-
 const hideUpdateDialog = () => {
     updateSubmitted.value = false;
     updateDialog.value = false;
 };
-
+const addOrderUpdateItem = () => {
+    let product = products.value[0];
+    let item = ref({
+        product_id: product.id,
+        order_id: "",
+        price: product.price,
+        quantity: 1,
+        observation: undefined,
+        size: Size.S
+    });
+    orderUpdate.value.items?.push(item.value);
+    if (orderUpdate.value.total) orderUpdate.value.total += product.price;
+    else orderUpdate.value.total = product.price;
+    watch(() => item.value.product_id, (newValue, oldValue) => {
+        if (newValue !== oldValue) {
+            let prd = products.value.find((item) => item.id === newValue);
+            if (prd) item.value.price = prd?.price;
+        }
+        if (orderUpdate.value.total && orderUpdate.value.items) orderUpdate.value.total = calculTotal(orderUpdate.value.items);
+    });
+    watch(item, () => {
+        if (orderUpdate.value.total && orderUpdate.value.items) orderUpdate.value.total = calculTotal(orderUpdate.value.items);
+    }, { deep: true });
+}
+const removeItemUpdate = (index: number) => {
+    if (orderUpdate.value.items && index !== -1) {
+        let item = orderUpdate.value.items.splice(index, 1);
+        if (orderUpdate.value.total) orderUpdate.value.total -= item[0].price * item[0].quantity;
+    }
+}
 const update = async () => {
     try {
         updateSubmitted.value = true;
@@ -187,51 +274,6 @@ const update = async () => {
         toast.add({ severity: 'error', summary: 'Erreur', detail: 'Commande n\' est pas modifié !!', life: 3000 });
     }
 };
-
-const deleteDialog = ref(false);
-const deleteOrderId = ref("");
-
-const openDeleteDialog = (data: OrderInterface) => {
-    deleteOrderId.value = data.id;
-    deleteDialog.value = true;
-};
-
-const remove = async () => {
-    try {
-        await deleteOrder(deleteOrderId.value);
-        deleteDialog.value = false;
-        await loadOrders();
-        toast.add({ severity: 'success', summary: 'Reussite', detail: 'Votre commande est bien supprimé !!', life: 3000 });
-    } catch (error: any) {
-        console.error(error.message);
-        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Commande n\' est pas supprimé !!', life: 3000 });
-    }
-};
-
-const loadOrders = async () => {
-    const res = await getAllOrders();
-    orders.value = res;
-};
-
-onMounted(async () => {
-    await loadOrders();
-    products.value = await getAllProducts();
-});
-
-let addressList = WilayasMunicipalitiesJSON
-let municipalities = ref<any>([]);
-let wilayas = Object.keys(WilayasMunicipalitiesJSON).map((item) => { return { name: item } });
-watch(customer.value, (newValue) => {
-    municipalities.value.length = 0;
-    if (newValue.address && newValue.address.province) {
-        let list = (addressList as any)[newValue.address.province.name]
-        if (list) {
-            list.forEach((item: any) => {
-                municipalities.value.push({ name: item });
-            });
-        }
-    }
-});
 watch(customerUpdate.value, (newValue) => {
     municipalities.value.length = 0
     if (newValue.address && newValue.address.province) {
@@ -243,68 +285,25 @@ watch(customerUpdate.value, (newValue) => {
         }
     }
 
-})
+});
 
-const addOrderItem = () => {
-    let product = products.value[0];
-    order.value.items?.push({
-        product_id: product.id,
-        order_id: "",
-        price: product.price,
-        quantity: 1,
-        observation: undefined,
-        size: Size.S
-    });
-    order.value.items?.forEach((item, index) => {
-        watch(
-            () => item.quantity,
-            (newQuantity, oldQuantity) => {
-                order.value.total += item.price * (newQuantity - oldQuantity)
-            }
-        );
-        watch(
-            () => item.product_id,
-            (newProductId, oldProductId) => {
-                order.value.total -= item.price * item.quantity
-                let x = products.value.find((item) => item.id === newProductId);
-                item.price = x?.price as number;
-                order.value.total += item.price * item.quantity
-            }
-        );
-    });
-    order.value.total += product.price
-}
-
-const addOrderItemUpdate = () => {
-    let product = products.value[0];
-    orderUpdate.value.items?.push({
-        product_id: product.id,
-        order_id: "",
-        price: product.price,
-        quantity: 1,
-        observation: undefined,
-        size: Size.S
-    });
-    orderUpdate.value.items?.forEach((item, index) => {
-        watch(
-            () => item.quantity,
-            (newQuantity, oldQuantity) => {
-                if (orderUpdate.value.total) orderUpdate.value.total += item.price * (newQuantity - oldQuantity)
-            }
-        );
-        watch(
-            () => item.product_id,
-            (newProductId, oldProductId) => {
-                if (orderUpdate.value.total) orderUpdate.value.total -= item.price * item.quantity
-                let x = products.value.find((item) => item.id === newProductId);
-                item.price = x?.price as number;
-                if (orderUpdate.value.total) orderUpdate.value.total += item.price * item.quantity
-            }
-        );
-    });
-    if (orderUpdate.value.total) orderUpdate.value.total += product.price
-}
-
+const deleteDialog = ref(false);
+const deleteOrderId = ref("");
+const openDeleteDialog = (data: OrderInterface) => {
+    deleteOrderId.value = data.id;
+    deleteDialog.value = true;
+};
+const remove = async () => {
+    try {
+        await deleteOrder(deleteOrderId.value);
+        deleteDialog.value = false;
+        await loadOrders();
+        toast.add({ severity: 'success', summary: 'Reussite', detail: 'Votre commande est bien supprimé !!', life: 3000 });
+    } catch (error: any) {
+        console.error(error.message);
+        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Commande n\' est pas supprimé !!', life: 3000 });
+    }
+};
 </script>
 
 <template>
@@ -497,40 +496,62 @@ const addOrderItemUpdate = () => {
                         <label for="observation">Observation</label>
                         <Textarea id="observation" v-model="orderUpdate.observation" rows="3" cols="20" />
                     </div>
-                    <span v-if="orderUpdate.items && orderUpdate.items.length" v-for="item in orderUpdate.items">
+                    <div class="field text-center">
+                        <Button icon="pi pi-plus" class="mr-2" severity="success" rounded
+                            @click="addOrderUpdateItem()" />
+                    </div>
+                    <span v-if="orderUpdate.items && orderUpdate.items.length"
+                        v-for="(item, index) in orderUpdate.items">
                         <div class="field">
-                            <label for="Commun">Produit</label>
-                            <Dropdown v-model="item.product_id" :options="products" optionLabel="name" optionValue="id"
-                                placeholder="Aucun" :filter="true" />
+                            <div class="formgrid grid">
+                                <div class="field col">
+                                    <label for="Commun">Produit</label>
+                                    <Dropdown v-model="item.product_id" :options="products" optionLabel="name"
+                                        optionValue="id" placeholder="Aucun" :filter="true" />
+                                </div>
+                                <div class="field col">
+                                    <label for="Commun">Taille</label>
+                                    <Dropdown v-model="item.size" :options="sizeEnumList" placeholder="Aucun"
+                                        :filter="true" />
+                                </div>
+                            </div>
                         </div>
                         <div class="field">
-                            <label for="quantity">Quantité</label>
-                            <InputNumber id="quantity" v-model="item.quantity" required="true" autofocus
-                                :class="{ 'p-invalid': createSubmitted && !item.quantity }" />
-                            <small class="p-error" v-if="createSubmitted && !item.quantity">Quantité est
-                                obligatoire.</small>
+                            <div class="formgrid grid">
+                                <div class="field col">
+                                    <label for="quantity">Quantité</label>
+                                    <InputNumber id="quantity" v-model="item.quantity" required="true" autofocus
+                                        :class="{ 'p-invalid': updateSubmitted && !item.quantity }" />
+                                    <small class="p-error" v-if="updateSubmitted && !item.quantity">Quantité est
+                                        obligatoire.</small>
+                                </div>
+                                <div class="field col">
+                                    <label for="price">Prix</label>
+                                    <InputNumber id="price" v-model="item.price"
+                                        :class="{ 'p-invalid': updateSubmitted && !item.price }" />
+                                    <small class="p-error" v-if="updateSubmitted && !item.price">Prix est
+                                        obligatoire.</small>
+                                </div>
+                            </div>
                         </div>
                         <div class="field">
-                            <label for="price">Prix</label>
-                            <InputNumber id="price" v-model="item.price"
-                                :class="{ 'p-invalid': createSubmitted && !item.price }" />
-                            <small class="p-error" v-if="createSubmitted && !item.price">Prix est
-                                obligatoire.</small>
+                            <Button severity="danger" label="Supprimer" icon="pi pi-trash"
+                                @click="removeItemUpdate(index)" />
                         </div>
                         <Divider layout="horizontal"></Divider>
                     </span>
                     <div class="field">
                         <label for="total">Total</label>
                         <InputNumber id="total" v-model="orderUpdate.total" required="true" autofocus
-                            :class="{ 'p-invalid': createSubmitted && !orderUpdate.total }" />
-                        <small class="p-error" v-if="createSubmitted && !orderUpdate.total">Total est
+                            :class="{ 'p-invalid': updateSubmitted && !orderUpdate.total }" />
+                        <small class="p-error" v-if="updateSubmitted && !orderUpdate.total">Total est
                             obligatoire.</small>
                     </div>
                     <div class="field">
                         <label for="delivery_cost">Livraison</label>
                         <InputNumber id="delivery_cost" v-model="orderUpdate.delivery_cost" required="true" autofocus
-                            :class="{ 'p-invalid': createSubmitted && !orderUpdate.delivery_cost }" />
-                        <small class="p-error" v-if="createSubmitted && !orderUpdate.delivery_cost">Livraison est
+                            :class="{ 'p-invalid': updateSubmitted && !orderUpdate.delivery_cost }" />
+                        <small class="p-error" v-if="updateSubmitted && !orderUpdate.delivery_cost">Livraison est
                             obligatoire.</small>
                     </div>
                     <div class="field">
