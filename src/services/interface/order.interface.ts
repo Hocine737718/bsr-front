@@ -13,6 +13,7 @@ export interface OrderInterface {
     updatedAt: Date;
     deletedAt?: Date | null; // Nullable field for soft deletion
     items?: OrderItemInterface[];
+    andersonOrders?: { status: "Success" | "InProgress" | "Error" }
 }
 export interface CreateOrderInterface {
     customerId: string;

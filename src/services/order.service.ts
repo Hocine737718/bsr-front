@@ -34,3 +34,8 @@ export async function deleteOrder(id: string): Promise<Boolean> {
     const response = await api.delete<Boolean>("/orders/" + id);
     return response as any;
 }
+
+export async function confirmOrder(id: string): Promise<Boolean> {
+    const response = await api.post<Boolean>("/orders/confirm/" + id);
+    return response as any;
+}

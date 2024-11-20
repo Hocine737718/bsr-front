@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { FilterMatchMode } from 'primevue/api';
 import { ref, onMounted, watch } from 'vue';
-import { createOrder, createOrderItems, deleteOrder, getAllOrders, updateOrder } from '@/services/order.service';
+import { confirmOrder, createOrder, createOrderItems, deleteOrder, getAllOrders, updateOrder } from '@/services/order.service';
 import type { CreateOrderInterface, OrderInterface, UpdateOrderInterface } from '@/services/interface/order.interface';
 import { useToast } from 'primevue/usetoast';
 import type { CreateCustomerInterface, UpdateCustomerInterface } from '@/services/interface/customer.interface';
@@ -304,6 +304,24 @@ const remove = async () => {
         toast.add({ severity: 'error', summary: 'Erreur', detail: 'Commande n\' est pas supprimé !!', life: 3000 });
     }
 };
+
+const confirmDialog = ref(false);
+const confirmOrderId = ref("");
+const openConfirmDialog = (data: OrderInterface) => {
+    confirmOrderId.value = data.id;
+    confirmDialog.value = true;
+};
+const confirm = async () => {
+    try {
+        await confirmOrder(confirmOrderId.value);
+        confirmDialog.value = false;
+        await loadOrders();
+        toast.add({ severity: 'success', summary: 'Reussite', detail: 'Votre commande a été envoyé au Anderson !!', life: 3000 });
+    } catch (error: any) {
+        console.error(error.message);
+        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Commande n\' a pas été envoyé au Anderson !!', life: 3000 });
+    }
+};
 </script>
 
 <template>
@@ -362,8 +380,10 @@ const remove = async () => {
                             {{ (slotProps.data.is_to_office) ? "Oui" : "Non" }}
                         </template>
                     </Column>
-                    <Column headerStyle="min-width:10rem;">
+                    <Column headerStyle="min-width:12rem;">
                         <template #body="slotProps">
+                            <Button v-if="slotProps.data.andersonOrders.status !== 'Success'" icon="pi pi-check"
+                                class="mr-2" severity="info" rounded @click="openConfirmDialog(slotProps.data)" />
                             <Button icon="pi pi-pencil" class="mr-2" severity="success" rounded
                                 @click="openUpdateDialog(slotProps.data)" />
                             <Button icon="pi pi-trash" severity="danger" rounded
@@ -574,6 +594,17 @@ const remove = async () => {
                     <template #footer>
                         <Button label="Non" icon="pi pi-times" text @click="deleteDialog = false" />
                         <Button label="Oui" icon="pi pi-check" text @click="remove" />
+                    </template>
+                </Dialog>
+
+                <Dialog v-model:visible="confirmDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
+                    <div class="flex align-items-center justify-content-center">
+                        <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
+                        <span>Voulez-vous vraiment confirmer cette commande?</span>
+                    </div>
+                    <template #footer>
+                        <Button label="Non" icon="pi pi-times" text @click="confirmDialog = false" />
+                        <Button label="Oui" icon="pi pi-check" text @click="confirm" />
                     </template>
                 </Dialog>
             </div>
