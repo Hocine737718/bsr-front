@@ -1,4 +1,4 @@
-import type { Size } from "@/shared/utils";
+import type { Color, Size } from "@/shared/utils";
 import type { CustomerInterface } from "./customer.interface";
 import type { OrderItemInterface } from "./orderItem.interface";
 export interface OrderInterface {
@@ -38,4 +38,5 @@ export interface CreateOrderItemsInterface {
     price: number;
     observation?: string;
     size: Size;
+    color: Color;
 }

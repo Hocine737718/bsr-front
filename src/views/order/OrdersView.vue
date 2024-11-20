@@ -9,7 +9,7 @@ import { createCustomer, updateCustomer } from '@/services/customer.service';
 import WilayasMunicipalitiesJSON from '@/data/wilayas_municipalities.json' with { type: 'json' }
 import type { ProductInterface } from '@/services/interface/product.interface';
 import { getAllProducts } from '@/services/product.service';
-import { Size, sizeEnumList } from '@/shared/utils';
+import { Color, colorList, Size, sizeEnumList } from '@/shared/utils';
 
 const toast = useToast();
 const checkboxValue = ref([] as string[]);
@@ -106,7 +106,8 @@ const addOrderItem = () => {
         price: product.price,
         quantity: 1,
         observation: undefined,
-        size: Size.S
+        size: Size.S,
+        color: Color.Black
     });
     order.value.items?.push(item.value);
     order.value.total += product.price;
@@ -232,7 +233,8 @@ const addOrderUpdateItem = () => {
         price: product.price,
         quantity: 1,
         observation: undefined,
-        size: Size.S
+        size: Size.S,
+        color: Color.Black
     });
     orderUpdate.value.items?.push(item.value);
     if (orderUpdate.value.total) orderUpdate.value.total += product.price;
@@ -459,6 +461,21 @@ const confirm = async () => {
                             </div>
                         </div>
                         <div class="field">
+                            <div class="formgrid grid">
+                                <div class="field col">
+                                    <label for="Commun">Observation</label>
+                                    <InputText id="item-obs" v-model.trim="item.observation" required="true"
+                                        autofocus />
+                                </div>
+                                <div class="field col">
+                                    <label for="Commun">Couleur</label>
+                                    <Dropdown v-model="item.color"
+                                        :options="colorList.map((item: any) => { return item })" optionLabel="display"
+                                        optionValue="value" placeholder="Aucun" :filter="true" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field">
                             <Button severity="danger" label="Supprimer" icon="pi pi-trash" @click="removeItem(index)" />
                         </div>
                         <Divider layout="horizontal"></Divider>
@@ -551,6 +568,22 @@ const confirm = async () => {
                                         :class="{ 'p-invalid': updateSubmitted && !item.price }" />
                                     <small class="p-error" v-if="updateSubmitted && !item.price">Prix est
                                         obligatoire.</small>
+                                </div>
+                                <div class="field">
+                                    <div class="formgrid grid">
+                                        <div class="field col">
+                                            <label for="Commun">Observation</label>
+                                            <InputText id="item-obs" v-model.trim="item.observation" required="true"
+                                                autofocus />
+                                        </div>
+                                        <div class="field col">
+                                            <label for="Commun">Couleur</label>
+                                            <Dropdown v-model="item.color"
+                                                :options="colorList.map((item: any) => { return item })"
+                                                optionLabel="display" optionValue="value" placeholder="Aucun"
+                                                :filter="true" />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

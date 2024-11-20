@@ -15,4 +15,9 @@ export enum Size {
     XL = 'XL',
     XXL = 'XXL',
 }
-export const sizeEnumList = ['S', 'M', 'L', 'XL', 'XXL']; 
+export enum Color {
+    Black = "Black",
+    White = "White"
+}
+export const sizeEnumList = ['S', 'M', 'L', 'XL', 'XXL'];
+export const colorList = [{ display: 'Noir', value: 'Black' }, { display: 'Blanc', value: 'White' }]; 
