@@ -1578,7 +1578,7 @@
   ],
   "Bordj Badji Mokhtar": ["Timiaouine", "Bordj Badji Mokhtar"],
   "Ouled Djellal": ["Ras El Miad", "Besbes", "Sidi Khaled", "Doucen", "Chaiba", "Ouled Djellal"],
-  "Béni Abbès": [
+  "Beni Abbes": [
     "Beni-Abbes",
     "Tamtert",
     "Igli",
@@ -1607,7 +1607,7 @@
     "Zaouia El Abidia"
   ],
   "Djanet": ["Djanet", "Bordj El Haouass"],
-  "El Meghaier": [
+  "El M'Ghair": [
     "Oum Touyour",
     "Sidi Amrane",
     "M'rara",
@@ -1617,5 +1617,5 @@
     "Still",
     "Sidi Khelil"
   ],
-  "El Menia": ["El Meniaa", "Hassi Gara", "Hassi Fehal"]
+  "El Meniaa": ["El Meniaa", "Hassi Gara", "Hassi Fehal"]
 }
