@@ -384,8 +384,8 @@ const confirm = async () => {
                         <template #body="slotProps">
                             <Button v-if="slotProps.data.andersonOrders.status !== 'Success'" icon="pi pi-check"
                                 class="mr-2" severity="info" rounded @click="openConfirmDialog(slotProps.data)" />
-                            <Button icon="pi pi-pencil" class="mr-2" severity="success" rounded
-                                @click="openUpdateDialog(slotProps.data)" />
+                            <Button v-if="slotProps.data.andersonOrders.status === 'InProgress'" icon="pi pi-pencil"
+                                class="mr-2" severity="success" rounded @click="openUpdateDialog(slotProps.data)" />
                             <Button icon="pi pi-trash" severity="danger" rounded
                                 @click="openDeleteDialog(slotProps.data)" />
                         </template>
